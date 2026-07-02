@@ -1,500 +1,93 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Payments dashboard</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
-<style>
-  :root {
-    --color-background-primary: #ffffff;
-    --color-background-secondary: #f5f4f1;
-    --color-background-tertiary: #fafaf8;
-    --color-background-info: #e6f1fb;
-    --color-background-success: #eaf3de;
-    --color-background-danger: #fcebeb;
-    --color-background-warning: #faeeda;
-    --color-text-primary: #1a1a18;
-    --color-text-secondary: #6b6a65;
-    --color-text-tertiary: #9a998f;
-    --color-text-info: #0c447c;
-    --color-text-success: #27500a;
-    --color-text-danger: #791f1f;
-    --color-text-warning: #633806;
-    --color-border-tertiary: rgba(0,0,0,0.12);
-    --color-border-secondary: rgba(0,0,0,0.25);
-    --border-radius-md: 8px;
-    --border-radius-lg: 12px;
-    --chart-line: #378ADD;
-    --chart-line-fill: rgba(55,138,221,0.08);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --color-background-primary: #1e1e1c;
-      --color-background-secondary: #2a2a27;
-      --color-background-tertiary: #171716;
-      --color-background-info: #0c447c;
-      --color-background-success: #27500a;
-      --color-background-danger: #791f1f;
-      --color-background-warning: #633806;
-      --color-text-primary: #f1efe8;
-      --color-text-secondary: #b4b2a9;
-      --color-text-tertiary: #888780;
-      --color-text-info: #b5d4f4;
-      --color-text-success: #c0dd97;
-      --color-text-danger: #f7c1c1;
-      --color-text-warning: #fac775;
-      --color-border-tertiary: rgba(255,255,255,0.12);
-      --color-border-secondary: rgba(255,255,255,0.25);
-    }
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    padding: 2rem;
-    background: var(--color-background-tertiary);
-    color: var(--color-text-primary);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  }
-  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
-  .wrap { max-width: 1140px; margin: 0 auto; }
-  .card {
-    background: var(--color-background-primary);
-    border: 0.5px solid var(--color-border-tertiary);
-    border-radius: var(--border-radius-lg);
-    padding: 1rem 1.25rem;
-  }
-  select, input[type="text"], input[type="search"] {
-    height: 34px;
-    border: 0.5px solid var(--color-border-tertiary);
-    border-radius: var(--border-radius-md);
-    background: var(--color-background-primary);
-    color: var(--color-text-primary);
-    padding: 0 10px;
-    font-size: 13px;
-    font-family: inherit;
-  }
-  select:focus, input:focus { outline: none; box-shadow: 0 0 0 2px var(--color-background-info); }
-  button {
-    font-family: inherit;
-    font-size: 13px;
-    background: transparent;
-    border: 0.5px solid var(--color-border-secondary);
-    border-radius: var(--border-radius-md);
-    padding: 7px 12px;
-    color: var(--color-text-primary);
-    cursor: pointer;
-  }
-  button:hover { background: var(--color-background-secondary); }
-  button:active { transform: scale(0.98); }
-  .chip {
-    border: 0.5px solid var(--color-border-tertiary);
-    border-radius: 999px;
-    padding: 5px 12px;
-    font-size: 12px;
-    background: var(--color-background-primary);
-    color: var(--color-text-secondary);
-    cursor: pointer;
-  }
-  .chip.active {
-    background: var(--color-background-info);
-    color: var(--color-text-info);
-    border-color: transparent;
-  }
-  .metric-label { font-size: 12px; color: var(--color-text-secondary); margin: 0 0 6px; }
-  .metric-value { font-size: 24px; font-weight: 500; margin: 0 0 6px; }
-  .metric-trend { font-size: 12px; display: flex; align-items: center; gap: 4px; }
-  .trend-up { color: var(--color-text-success); }
-  .trend-down { color: var(--color-text-danger); }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; font-weight: 500; color: var(--color-text-secondary); font-size: 12px; padding: 8px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); cursor: pointer; user-select: none; white-space: nowrap; }
-  th:hover { color: var(--color-text-primary); }
-  td { padding: 10px; border-bottom: 0.5px solid var(--color-border-tertiary); }
-  tr:last-child td { border-bottom: none; }
-  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 3px 9px; border-radius: 999px; }
-  .badge-success { background: var(--color-background-success); color: var(--color-text-success); }
-  .badge-declined { background: var(--color-background-danger); color: var(--color-text-danger); }
-  .badge-pending { background: var(--color-background-warning); color: var(--color-text-warning); }
-  .badge-refunded { background: var(--color-background-secondary); color: var(--color-text-secondary); }
-  .sort-icon { font-size: 12px; margin-left: 3px; color: var(--color-text-tertiary); }
-</style>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.6">
+  <style type="text/css">
+    body {background-color: #f9f9f6}
+    p.p4 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px Times; color: #141413; -webkit-text-stroke: #141413; background-color: #ffffff}
+    p.p5 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px 'Helvetica Neue'; color: #141413; -webkit-text-stroke: #141413; background-color: #ffffff; min-height: 16.0px}
+    p.p6 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 13.0px 'Helvetica Neue'; color: #141413; -webkit-text-stroke: #141413}
+    p.p7 {margin: 0.0px 0.0px 6.0px 0.0px; font: 12.0px 'Helvetica Neue'; color: #585752; -webkit-text-stroke: #585752}
+    p.p8 {margin: 0.0px 0.0px 6.0px 0.0px; font: 24.0px '.SF NS'; color: #141413; -webkit-text-stroke: #141413}
+    p.p9 {margin: 0.0px 0.0px 12.0px 0.0px; font: 12.0px 'Helvetica Neue'; color: #585752; -webkit-text-stroke: #585752}
+    p.p10 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'Helvetica Neue'; color: #141413; -webkit-text-stroke: #141413; min-height: 15.0px}
+    p.p11 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px 'Helvetica Neue'; color: #88877c; -webkit-text-stroke: #88877c; min-height: 17.0px}
+    p.p12 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 12.0px 'Helvetica Neue'; color: #0d3269; -webkit-text-stroke: #0d3269; background-color: #e0edfa}
+    p.p13 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 12.0px 'Helvetica Neue'; color: #585752; -webkit-text-stroke: #585752; background-color: #ffffff}
+    p.p14 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px '.SF NS'; color: #585752; -webkit-text-stroke: #585752}
+    p.p15 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px 'Helvetica Neue'; color: #141413; -webkit-text-stroke: #141413; min-height: 16.0px}
+    p.p16 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'Helvetica Neue'; color: #88877c; -webkit-text-stroke: #88877c; min-height: 15.0px}
+    p.p17 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 13.0px 'Helvetica Neue'; color: #141413; -webkit-text-stroke: #141413; min-height: 16.0px}
+    span.s1 {font-kerning: none}
+    span.s2 {font: 13.0px 'Helvetica Neue'; font-kerning: none}
+    span.s3 {font-kerning: none; background-color: #ffffff}
+    table.t1 {border-collapse: collapse}
+    td.td1 {width: 177.7px; border-style: solid; border-width: 0.0px 0.0px 0.5px 0.0px; border-color: #585752 #585752 #000000 #585752; padding: 8.0px 10.0px 8.0px 10.0px}
+    td.td2 {width: 132.8px; border-style: solid; border-width: 0.0px 0.0px 0.5px 0.0px; border-color: #585752 #585752 #000000 #585752; padding: 8.0px 10.0px 8.0px 10.0px}
+    td.td3 {width: 112.2px; border-style: solid; border-width: 0.0px 0.0px 0.5px 0.0px; border-color: #585752 #585752 #000000 #585752; padding: 8.0px 10.0px 8.0px 10.0px}
+    td.td4 {width: 113.9px; border-style: solid; border-width: 0.0px 0.0px 0.5px 0.0px; border-color: #585752 #585752 #000000 #585752; padding: 8.0px 10.0px 8.0px 10.0px}
+    td.td5 {width: 100.8px; border-style: solid; border-width: 0.0px 0.0px 0.5px 0.0px; border-color: #585752 #585752 #000000 #585752; padding: 8.0px 10.0px 8.0px 10.0px}
+    td.td6 {width: 83.6px; border-style: solid; border-width: 0.0px 0.0px 0.5px 0.0px; border-color: #585752 #585752 #000000 #585752; padding: 8.0px 10.0px 8.0px 10.0px}
+  </style>
 </head>
 <body>
-
-<h1 class="sr-only">Payments dashboard</h1>
-<h2 class="sr-only">An interactive dashboard showing transaction volume, success rate, payment method breakdown, and a filterable table of recent transactions.</h2>
-
-<div class="wrap">
-
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:12px;">
-    <h1 style="font-size:20px;font-weight:500;margin:0;">Payments dashboard</h1>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <select id="date-range">
-        <option value="7">Last 7 days</option>
-        <option value="30" selected>Last 30 days</option>
-        <option value="90">Last 90 days</option>
-      </select>
-      <button id="export-btn"><i class="ti ti-download" style="font-size:14px;vertical-align:-2px;margin-right:4px;" aria-hidden="true"></i>Export</button>
-    </div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.25rem;">
-    <div class="card">
-      <p class="metric-label">Total volume</p>
-      <p class="metric-value" id="metric-volume">&mdash;</p>
-      <p class="metric-trend" id="metric-volume-trend"></p>
-    </div>
-    <div class="card">
-      <p class="metric-label">Success rate</p>
-      <p class="metric-value" id="metric-success">&mdash;</p>
-      <p class="metric-trend" id="metric-success-trend"></p>
-    </div>
-    <div class="card">
-      <p class="metric-label">Avg transaction value</p>
-      <p class="metric-value" id="metric-avg">&mdash;</p>
-      <p class="metric-trend" id="metric-avg-trend"></p>
-    </div>
-    <div class="card">
-      <p class="metric-label">Declined transactions</p>
-      <p class="metric-value" id="metric-declined">&mdash;</p>
-      <p class="metric-trend" id="metric-declined-trend"></p>
-    </div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:1.25rem;">
-    <div class="card">
-      <p class="metric-label" style="margin-bottom:12px;">Transaction volume over time</p>
-      <div style="position:relative;height:220px;">
-        <canvas id="volume-chart"></canvas>
-      </div>
-    </div>
-    <div class="card">
-      <p class="metric-label" style="margin-bottom:12px;">Payment methods</p>
-      <div style="position:relative;height:220px;">
-        <canvas id="methods-chart"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
-      <div style="position:relative;">
-        <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--color-text-tertiary);" aria-hidden="true"></i>
-        <input type="search" id="search-input" placeholder="Search transaction ID or customer" style="width:260px;padding-left:30px;" />
-      </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;" id="status-chips">
-        <button class="chip active" data-status="all">All</button>
-        <button class="chip" data-status="success">Success</button>
-        <button class="chip" data-status="declined">Declined</button>
-        <button class="chip" data-status="pending">Pending</button>
-        <button class="chip" data-status="refunded">Refunded</button>
-      </div>
-    </div>
-
-    <div style="overflow-x:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th data-sort="id">Transaction ID<span class="sort-icon"></span></th>
-            <th data-sort="customer">Customer<span class="sort-icon"></span></th>
-            <th data-sort="method">Method<span class="sort-icon"></span></th>
-            <th data-sort="amount">Amount<span class="sort-icon"></span></th>
-            <th data-sort="status">Status<span class="sort-icon"></span></th>
-            <th data-sort="date">Date<span class="sort-icon"></span></th>
-          </tr>
-        </thead>
-        <tbody id="tx-body"></tbody>
-      </table>
-    </div>
-
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
-      <p style="font-size:12px;color:var(--color-text-tertiary);margin:0;" id="page-info"></p>
-      <div style="display:flex;gap:6px;">
-        <button id="prev-page" aria-label="Previous page"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
-        <button id="next-page" aria-label="Next page"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<script>
-const METHODS = ['Card', 'PayPal', 'Apple Pay', 'Google Pay', 'Bank transfer'];
-const STATUSES = ['success', 'success', 'success', 'success', 'declined', 'pending', 'refunded'];
-const CUSTOMERS = ['A. Novak', 'M. Rodriguez', 'J. Kim', 'S. Patel', 'L. Fischer', 'T. Nguyen', 'R. Costa', 'E. Larsson', 'D. Okafor', 'H. Suzuki', 'C. Dubois', 'P. Alvarez'];
-
-let allTransactions = [];
-let filteredTransactions = [];
-let currentStatus = 'all';
-let currentSearch = '';
-let sortField = 'date';
-let sortDir = 'desc';
-let currentPage = 1;
-const PAGE_SIZE = 6;
-let volumeChart, methodsChart;
-
-function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-function pick(arr) { return arr[randInt(0, arr.length - 1)]; }
-
-function generateTransactions(days) {
-  const txs = [];
-  const now = new Date();
-  const count = days === 7 ? 26 : days === 30 ? 64 : 128;
-  for (let i = 0; i < count; i++) {
-    const daysAgo = randInt(0, days - 1);
-    const date = new Date(now);
-    date.setDate(date.getDate() - daysAgo);
-    const status = pick(STATUSES);
-    txs.push({
-      id: 'TX-' + (100000 + randInt(0, 899999)),
-      customer: pick(CUSTOMERS),
-      method: pick(METHODS),
-      amount: randInt(500, 45000) / 100,
-      status,
-      date
-    });
-  }
-  return txs;
-}
-
-function formatCurrency(v) {
-  return '£' + v.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-function formatDate(d) {
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
-function computeMetrics(txs, days) {
-  const total = txs.reduce((s, t) => s + t.amount, 0);
-  const successCount = txs.filter(t => t.status === 'success').length;
-  const declinedCount = txs.filter(t => t.status === 'declined').length;
-  const successRate = txs.length ? (successCount / txs.length) * 100 : 0;
-  const avg = txs.length ? total / txs.length : 0;
-  return { total, successRate, avg, declinedCount };
-}
-
-function renderMetrics(days) {
-  const current = computeMetrics(allTransactions, days);
-  const prevTxs = generateTransactions(days);
-  const prev = computeMetrics(prevTxs, days);
-
-  function setMetric(valueId, trendId, currentVal, prevVal, formatter, higherIsBetter = true) {
-    document.getElementById(valueId).textContent = formatter(currentVal);
-    const diff = prevVal === 0 ? 0 : ((currentVal - prevVal) / prevVal) * 100;
-    const isUp = diff >= 0;
-    const good = higherIsBetter ? isUp : !isUp;
-    const el = document.getElementById(trendId);
-    el.className = 'metric-trend ' + (good ? 'trend-up' : 'trend-down');
-    el.innerHTML = '<i class="ti ti-arrow-' + (isUp ? 'up-right' : 'down-right') + '" style="font-size:13px;" aria-hidden="true"></i>' +
-      Math.abs(Math.round(diff * 10) / 10) + '% vs previous period';
-  }
-
-  setMetric('metric-volume', 'metric-volume-trend', current.total, prev.total, formatCurrency, true);
-  setMetric('metric-success', 'metric-success-trend', current.successRate, prev.successRate, v => Math.round(v * 10) / 10 + '%', true);
-  setMetric('metric-avg', 'metric-avg-trend', current.avg, prev.avg, formatCurrency, true);
-  setMetric('metric-declined', 'metric-declined-trend', current.declinedCount, prev.declinedCount, v => v, false);
-}
-
-function renderVolumeChart(days) {
-  const buckets = days === 7 ? 7 : days === 30 ? 10 : 12;
-  const bucketSize = Math.ceil(days / buckets);
-  const labels = [];
-  const data = [];
-  const now = new Date();
-  for (let i = buckets - 1; i >= 0; i--) {
-    const end = new Date(now);
-    end.setDate(end.getDate() - i * bucketSize);
-    labels.push(end.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }));
-    const start = new Date(end);
-    start.setDate(start.getDate() - bucketSize);
-    const sum = allTransactions
-      .filter(t => t.date > start && t.date <= end)
-      .reduce((s, t) => s + t.amount, 0);
-    data.push(Math.round(sum));
-  }
-
-  const ctx = document.getElementById('volume-chart').getContext('2d');
-  if (volumeChart) volumeChart.destroy();
-  volumeChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        data,
-        borderColor: '#378ADD',
-        backgroundColor: 'rgba(55,138,221,0.08)',
-        fill: true,
-        tension: 0.35,
-        pointRadius: 0,
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => formatCurrency(c.raw) } } },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-        y: { grid: { color: 'rgba(128,128,128,0.12)' }, ticks: { font: { size: 11 }, callback: v => '£' + v } }
-      }
-    }
-  });
-}
-
-function renderMethodsChart() {
-  const counts = {};
-  METHODS.forEach(m => counts[m] = 0);
-  allTransactions.forEach(t => counts[t.method]++);
-  const colors = ['#7F77DD', '#1D9E75', '#D85A30', '#D4537E', '#378ADD'];
-
-  const ctx = document.getElementById('methods-chart').getContext('2d');
-  if (methodsChart) methodsChart.destroy();
-  methodsChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: METHODS,
-      datasets: [{ data: METHODS.map(m => counts[m]), backgroundColor: colors, borderWidth: 0 }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '65%',
-      plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 10, padding: 10, color: getComputedStyle(document.body).getPropertyValue('--color-text-secondary') } }
-      }
-    }
-  });
-}
-
-function statusBadge(status) {
-  const map = {
-    success: ['badge-success', 'ti-check', 'Success'],
-    declined: ['badge-declined', 'ti-x', 'Declined'],
-    pending: ['badge-pending', 'ti-clock', 'Pending'],
-    refunded: ['badge-refunded', 'ti-arrow-back-up', 'Refunded']
-  };
-  const [cls, icon, label] = map[status];
-  return '<span class="badge ' + cls + '"><i class="ti ' + icon + '" style="font-size:12px;" aria-hidden="true"></i>' + label + '</span>';
-}
-
-function applyFilters() {
-  filteredTransactions = allTransactions.filter(t => {
-    const matchesStatus = currentStatus === 'all' || t.status === currentStatus;
-    const matchesSearch = !currentSearch ||
-      t.id.toLowerCase().includes(currentSearch) ||
-      t.customer.toLowerCase().includes(currentSearch);
-    return matchesStatus && matchesSearch;
-  });
-  sortTransactions();
-  currentPage = 1;
-  renderTable();
-}
-
-function sortTransactions() {
-  filteredTransactions.sort((a, b) => {
-    let av = a[sortField], bv = b[sortField];
-    if (sortField === 'date') { av = av.getTime(); bv = bv.getTime(); }
-    if (typeof av === 'string') { av = av.toLowerCase(); bv = bv.toLowerCase(); }
-    if (av < bv) return sortDir === 'asc' ? -1 : 1;
-    if (av > bv) return sortDir === 'asc' ? 1 : -1;
-    return 0;
-  });
-}
-
-function renderTable() {
-  const start = (currentPage - 1) * PAGE_SIZE;
-  const pageItems = filteredTransactions.slice(start, start + PAGE_SIZE);
-  const tbody = document.getElementById('tx-body');
-  tbody.innerHTML = pageItems.map(t => `
+<h1 style="margin: 0.0px 0.0px 16.1px 0.0px; font: 24.0px 'Helvetica Neue'; color: #141413; -webkit-text-stroke: #141413"><span class="s1"><b>Payments dashboard</b></span></h1>
+<h2 style="margin: 0.0px 0.0px 14.9px 0.0px; font: 18.0px 'Helvetica Neue'; color: #141413; -webkit-text-stroke: #141413"><span class="s1"><b>An interactive dashboard showing transaction volume, success rate, payment method breakdown, and a filterable table of recent transactions.</b></span></h2>
+<h1 style="margin: 0.0px 0.0px 0.0px 0.0px; font: 20.0px '.SF NS'; color: #141413; -webkit-text-stroke: #141413"><span class="s1">Payments dashboard</span></h1>
+<p class="p4"><span class="s2"><span class="Apple-converted-space">        </span></span><span class="s1">Last 7 days</span></p>
+<p class="p4"><span class="s2"><span class="Apple-converted-space">        </span></span><span class="s1">Last 30 days</span></p>
+<p class="p4"><span class="s2"><span class="Apple-converted-space">        </span></span><span class="s1">Last 80 days</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">      </span></span></p>
+<p class="p6"><span class="s1">Export</span></p>
+<p class="p7"><span class="s3">Total volume</span></p>
+<p class="p8"><span class="s3">—</span></p>
+<p class="p7"><span class="s3">Success rate</span></p>
+<p class="p8"><span class="s3">—</span></p>
+<p class="p7"><span class="s3">Avg transaction value</span></p>
+<p class="p8"><span class="s3">—</span></p>
+<p class="p7"><span class="s3">Declined transactions</span></p>
+<p class="p8"><span class="s3">—</span></p>
+<p class="p9"><span class="s3">Transaction volume over time</span></p>
+<p class="p10"><span class="s1"></span><br></p>
+<p class="p9"><span class="s3">Payment methods</span></p>
+<p class="p10"><span class="s1"></span><br></p>
+<p class="p11"><span class="s1"><i></i></span><br></p>
+<p class="p12"><span class="s1">All</span></p>
+<p class="p13"><span class="s1">Success</span></p>
+<p class="p13"><span class="s1">Declined</span></p>
+<p class="p13"><span class="s1">Pending</span></p>
+<p class="p13"><span class="s1">Refunded</span></p>
+<table cellspacing="0" cellpadding="0" class="t1">
+  <tbody>
     <tr>
-      <td>${t.id}</td>
-      <td>${t.customer}</td>
-      <td>${t.method}</td>
-      <td>${formatCurrency(t.amount)}</td>
-      <td>${statusBadge(t.status)}</td>
-      <td>${formatDate(t.date)}</td>
+      <td valign="middle" class="td1">
+        <p class="p14"><span class="s3">Transaction ID</span></p>
+      </td>
+      <td valign="middle" class="td2">
+        <p class="p14"><span class="s3">Customer</span></p>
+      </td>
+      <td valign="middle" class="td3">
+        <p class="p14"><span class="s3">Method</span></p>
+      </td>
+      <td valign="middle" class="td4">
+        <p class="p14"><span class="s3">Amount</span></p>
+      </td>
+      <td valign="middle" class="td5">
+        <p class="p14"><span class="s3">Status</span></p>
+      </td>
+      <td valign="middle" class="td6">
+        <p class="p14"><span class="s3">Date</span></p>
+      </td>
     </tr>
-  `).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--color-text-tertiary);padding:20px;">No transactions match your filters</td></tr>';
-
-  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE));
-  document.getElementById('page-info').textContent =
-    filteredTransactions.length === 0 ? '0 results' :
-    `${start + 1}-${Math.min(start + PAGE_SIZE, filteredTransactions.length)} of ${filteredTransactions.length}`;
-  document.getElementById('prev-page').disabled = currentPage <= 1;
-  document.getElementById('next-page').disabled = currentPage >= totalPages;
-
-  document.querySelectorAll('th[data-sort]').forEach(th => {
-    const icon = th.querySelector('.sort-icon');
-    if (th.dataset.sort === sortField) {
-      icon.innerHTML = sortDir === 'asc' ? '<i class="ti ti-arrow-up" aria-hidden="true"></i>' : '<i class="ti ti-arrow-down" aria-hidden="true"></i>';
-    } else {
-      icon.innerHTML = '';
-    }
-  });
-}
-
-function loadData() {
-  const days = parseInt(document.getElementById('date-range').value, 10);
-  allTransactions = generateTransactions(days);
-  renderMetrics(days);
-  renderVolumeChart(days);
-  renderMethodsChart();
-  applyFilters();
-}
-
-document.getElementById('date-range').addEventListener('change', loadData);
-
-document.getElementById('search-input').addEventListener('input', e => {
-  currentSearch = e.target.value.trim().toLowerCase();
-  applyFilters();
-});
-
-document.querySelectorAll('.chip').forEach(chip => {
-  chip.addEventListener('click', () => {
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    currentStatus = chip.dataset.status;
-    applyFilters();
-  });
-});
-
-document.querySelectorAll('th[data-sort]').forEach(th => {
-  th.addEventListener('click', () => {
-    const field = th.dataset.sort;
-    if (sortField === field) {
-      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-    } else {
-      sortField = field;
-      sortDir = 'asc';
-    }
-    sortTransactions();
-    renderTable();
-  });
-});
-
-document.getElementById('prev-page').addEventListener('click', () => {
-  if (currentPage > 1) { currentPage--; renderTable(); }
-});
-document.getElementById('next-page').addEventListener('click', () => {
-  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE));
-  if (currentPage < totalPages) { currentPage++; renderTable(); }
-});
-
-document.getElementById('export-btn').addEventListener('click', () => {
-  const rows = [['Transaction ID', 'Customer', 'Method', 'Amount', 'Status', 'Date']];
-  filteredTransactions.forEach(t => rows.push([t.id, t.customer, t.method, t.amount.toFixed(2), t.status, formatDate(t.date)]));
-  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'transactions.csv';
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-loadData();
-</script>
+  </tbody>
+</table>
+<p class="p15"><span class="s1"></span><br></p>
+<p class="p16"><span class="s1"></span><br></p>
+<p class="p17"><span class="s1"></span><br></p>
+<p class="p17"><span class="s1"></span><br></p>
 </body>
 </html>
